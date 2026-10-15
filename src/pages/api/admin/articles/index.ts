@@ -1,0 +1,12 @@
+import type { APIRoute } from 'astro'; import { db,audit } from '../../../../lib/db'; import { apiUser } from '../../../../lib/auth'; import { safeContent } from '../../../../lib/html';
+export const POST: APIRoute = async ({request,url}) => {
+  if(request.headers.get('origin')!==url.origin)return new Response('Invalid request origin',{status:403});
+  const authorized=await apiUser(request);if(authorized instanceof Response)return authorized;const user=authorized; const f=await request.formData();
+  const id=String(f.get('id')||crypto.randomUUID()); const title=String(f.get('title')||'').trim().slice(0,200); const slug=String(f.get('slug')||'').trim().toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-').slice(0,180); const excerpt=String(f.get('excerpt')||'').slice(0,500); const content=safeContent(String(f.get('content')||'')); const category=String(f.get('category_id')||''); const status=f.get('status')==='published'?'published':'draft'; const publishedAt=status==='published'?(String(f.get('published_at')||'').trim()||new Date().toISOString().slice(0,19).replace('T',' ')):null;
+  if(!title||!slug||!content||!category)return new Response('Title, slug, content, and category are required.',{status:400});
+  const image=String(f.get('image_url')||'/images/placeholder.svg').slice(0,1000); const alt=String(f.get('image_alt')||'').slice(0,300); const author=String(f.get('author_name')||user.name).slice(0,120); const seoTitle=String(f.get('seo_title')||'').slice(0,200); const seoDesc=String(f.get('seo_description')||'').slice(0,320);
+  await db().prepare(`INSERT INTO articles(id,title,slug,excerpt,content,image_url,image_alt,author_name,status,published_at,seo_title,seo_description) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
+   ON CONFLICT(id) DO UPDATE SET title=excluded.title,slug=excluded.slug,excerpt=excluded.excerpt,content=excluded.content,image_url=excluded.image_url,image_alt=excluded.image_alt,author_name=excluded.author_name,status=excluded.status,published_at=excluded.published_at,seo_title=excluded.seo_title,seo_description=excluded.seo_description,updated_at=datetime('now')`).bind(id,title,slug,excerpt,content,image,alt,author,status,publishedAt,seoTitle,seoDesc).run();
+  await db().prepare('DELETE FROM article_categories WHERE article_id=?').bind(id).run(); await db().prepare('INSERT INTO article_categories(article_id,category_id) VALUES(?,?)').bind(id,category).run(); await audit(user.id,'article_saved',`${id}:${status}`);
+  return new Response(null,{status:303,headers:{Location:'/admin/articles/?saved=1'}});
+};

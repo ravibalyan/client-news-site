@@ -1,0 +1,7 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';import {requireUser} from '../../lib/auth';import {db} from '../../lib/db';
+const user=await requireUser(Astro.request).catch(()=>null);if(!user)return Astro.redirect('/admin/login/');
+const [arts,cats,pages,admins]=await Promise.all([db().prepare('SELECT COUNT(*) n FROM articles').first<{n:number}>(),db().prepare('SELECT COUNT(*) n FROM categories').first<{n:number}>(),db().prepare('SELECT COUNT(*) n FROM pages').first<{n:number}>(),db().prepare('SELECT COUNT(*) n FROM admin_users WHERE active=1').first<{n:number}>()]);
+const stats: {name:string;count:number;href:string}[]=[{name:'Articles',count:arts?.n||0,href:'/admin/articles/'},{name:'Categories',count:cats?.n||0,href:'/admin/categories/'},{name:'Pages',count:pages?.n||0,href:'/admin/pages/'}];if(user.role==='super_admin')stats.push({name:'Active administrators',count:admins?.n||0,href:'/admin/users/'});
+---
+<AdminLayout user={user} title="Dashboard"><div class="grid">{stats.map(item=><a class="card card-body" href={item.href}><span class="tag">Overview</span><h2>{item.count}</h2><p>{item.name}</p></a>)}</div><div class="notice"><strong>Development content</strong><p>Sample stories are illustrative. Replace them with reviewed content before launch.</p></div></AdminLayout>

@@ -1,0 +1,23 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import { getArticle, articles } from '../../lib/content';
+import { setting } from '../../lib/db';
+import { imageSource, safeContent } from '../../lib/html';
+const article = await getArticle(Astro.params.slug || '');
+if (!article) return new Response('Article not found', { status: 404 });
+const related = await articles(3,0,article.category_slug);
+const adEnabled = await setting('ads_enabled','false') === 'true';
+const placement = await setting('ads_placement','after_intro');
+const jsonld = { '@context':'https://schema.org','@type':'NewsArticle',headline:article.title,image:[new URL(imageSource(article.image_url),Astro.url).href],datePublished:article.published_at,dateModified:article.updated_at,author:{'@type':'Person',name:article.author_name},description:article.seo_description || article.excerpt,mainEntityOfPage:Astro.url.href };
+const structuredData = JSON.stringify(jsonld).replace(/[<>&]/g, character => ({ '<':'\\u003c', '>':'\\u003e', '&':'\\u0026' }[character]!));
+---
+<SiteLayout title={article.seo_title || article.title} description={article.seo_description || article.excerpt} articleAds={true} image={article.image_url}>
+  <article class="article"><nav class="muted" aria-label="Breadcrumb"><a href="/">Home</a> / <a href={`/category/${article.category_slug}/`}>{article.category_name}</a></nav><span class="tag">{article.category_name}</span><h1>{article.title}</h1><p class="muted">By {article.author_name} · {article.published_at ? new Date(article.published_at).toLocaleDateString('en',{dateStyle:'long'}) : ''}</p><img class="cover" src={imageSource(article.image_url)} alt={article.image_alt} /><p class="muted">{article.excerpt}</p>
+  {adEnabled && placement === 'after_intro' && <AdSlot />}
+  <div class="prose" set:html={safeContent(article.content)}></div>
+  {adEnabled && placement === 'after_content' && <AdSlot />}
+  <script type="application/ld+json" set:html={structuredData}></script>
+  <section class="section"><div class="section-head"><h2>More to explore</h2></div><div class="grid">{related.filter(a => a.id !== article.id).slice(0,2).map(a => <ArticleCard article={a} />)}</div></section></article>
+</SiteLayout>

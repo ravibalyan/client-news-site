@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "client-news-site",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "compatibility_date": "2026-10-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [{ "binding": "DB", "database_name": "news-site", "database_id": "00000000-0000-4000-8000-000000000001", "preview_database_id": "DB" }],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "client-news-media"}],
+  "assets": { "directory": "./dist", "binding": "ASSETS" },
+  "observability": { "enabled": true }
+}

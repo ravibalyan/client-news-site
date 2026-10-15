@@ -1,0 +1,9 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro'; import ArticleCard from '../../components/ArticleCard.astro'; import { articles, categories } from '../../lib/content';
+const slug = Astro.params.slug || ''; const category = (await categories()).find(c => c.slug === slug);
+if (!category) return Astro.redirect('/404/');
+const requestedPage = Number(Astro.url.searchParams.get('page') || 1); const page = Number.isFinite(requestedPage) ? Math.max(1, Math.floor(requestedPage)) : 1; const items = await articles(9,(page-1)*9,slug);
+---
+<SiteLayout title={category.name} description={category.description}><section class="section wrap"><div class="section-head"><div><span class="eyebrow">Browse topic</span><h2>{category.name}</h2></div><p>{category.description}</p></div>
+{items.length ? <div class="grid">{items.map(article => <ArticleCard article={article} />)}</div> : <p class="notice">No published stories in this category yet.</p>}
+<nav class="pagination" aria-label="Pagination">{page > 1 && <a class="button" href={`?page=${page-1}`}>← Newer</a>}{items.length === 9 && <a class="button" href={`?page=${page+1}`}>Older →</a>}</nav></section></SiteLayout>

@@ -1,0 +1,6 @@
+---
+import { setting } from '../lib/db';
+const publisher = await setting('ads_publisher');
+const slot = await setting('ads_slot');
+---
+{publisher && slot && <div class="notice" aria-label="Advertisement"><span class="muted">Advertisement</span><ins class="adsbygoogle" style="display:block" data-ad-client={publisher} data-ad-slot={slot} data-ad-format="auto" data-full-width-responsive="true"></ins><script>(window.adsbygoogle = window.adsbygoogle || []).push({});</script></div>}

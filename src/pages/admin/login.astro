@@ -1,0 +1,4 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+---
+<SiteLayout title="Administrator login" noIndex={true}><section class="article"><span class="eyebrow">Secure access</span><h1>Administrator login</h1><p>Sign in to manage articles and site content.</p>{Astro.url.searchParams.has('setup') && <p class="notice">No administrator exists yet. Follow the first Super Admin setup command in the README.</p>}{Astro.url.searchParams.has('error') && <p class="notice error">{Astro.url.searchParams.get('error')}</p>}<form class="form" action="/api/auth/login/" method="post"><label>Email<input type="email" name="email" autocomplete="username" required /></label><label>Password<input type="password" name="password" autocomplete="current-password" required /></label><button>Sign in</button></form></section></SiteLayout>

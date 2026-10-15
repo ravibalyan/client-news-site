@@ -1,0 +1,2 @@
+import type { APIRoute } from 'astro';import {db,audit} from '../../../../lib/db';import {apiUser} from '../../../../lib/auth';
+export const POST:APIRoute=async({request,url,params})=>{if(request.headers.get('origin')!==url.origin)return new Response('Invalid origin',{status:403});const u=await apiUser(request);if(u instanceof Response)return u;await db().prepare('DELETE FROM categories WHERE id=?').bind(params.id).run();await audit(u.id,'category_deleted',String(params.id));return new Response(null,{status:303,headers:{Location:'/admin/categories/'}})};

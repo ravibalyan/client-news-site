@@ -1,0 +1,5 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro'; import ArticleCard from '../../components/ArticleCard.astro'; import { articles } from '../../lib/content';
+const q = (Astro.url.searchParams.get('q') || '').trim().slice(0,100); const results = q ? await articles(30,0,undefined,q) : [];
+---
+<SiteLayout title={q ? `Search: ${q}` : 'Search'} noIndex={true}><section class="section wrap"><div class="section-head"><h2>Search stories</h2></div><form class="search" action="/search/"><input name="q" value={q} placeholder="What are you looking for?" aria-label="Search articles" /><button>Search</button></form>{!q ? <p class="notice">Enter a word or phrase to search published articles.</p> : results.length ? <><p class="muted">{results.length} results for “{q}”</p><div class="grid">{results.map(article => <ArticleCard article={article} />)}</div></> : <p class="notice">No published stories matched “{q}”. Try another search.</p>}</section></SiteLayout>

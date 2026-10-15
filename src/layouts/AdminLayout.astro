@@ -1,0 +1,12 @@
+---
+import '../styles/global.css';
+import type { User } from '../lib/auth';
+const { user, title = 'Dashboard' } = Astro.props as { user: User; title?: string };
+---
+<div class="admin-shell"><aside class="admin-nav"><strong>Fieldnote Admin</strong><small style="display:block;margin:8px 0 18px;color:#b9d0c4">Signed in as {user.name}</small><a href="/admin/">Dashboard</a><a href="/admin/articles/">Articles</a><a href="/admin/categories/">Categories</a><a href="/admin/pages/">Pages</a><a href="/admin/media/">Media</a>{user.role==='super_admin' && <><a href="/admin/users/">Admin users</a><a href="/admin/settings/">Website & scripts</a></>}<a href="/admin/password/">Change password</a><a href="/">View website ↗</a><form action="/api/auth/logout/" method="post"><button style="margin-top:15px;background:#d4e6dc;color:#163b32">Sign out</button></form></aside><main class="admin-main"><p class="eyebrow">Administration</p><h1 style="font:700 2.2rem 'Playfair Display',serif">{title}</h1><slot /></main></div>
+<script>
+  document.querySelectorAll<HTMLFormElement>('form[data-confirm], form[data-confirm-delete]').forEach(form => form.addEventListener('submit', event => {
+    const message = form.dataset.confirm || (form.dataset.confirmDelete !== undefined && (event.submitter as HTMLButtonElement | null)?.value === 'delete' ? 'Delete this item? This cannot be undone.' : '');
+    if (message && !window.confirm(message)) event.preventDefault();
+  }));
+</script>

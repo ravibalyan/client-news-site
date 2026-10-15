@@ -1,0 +1,42 @@
+---
+import '../styles/global.css';
+import { setting } from '../lib/db';
+import { categories } from '../lib/content';
+import { imageSource } from '../lib/html';
+const { title = '', description = '', canonical = Astro.url.href, articleAds = false, image = '', noIndex = false } = Astro.props;
+const siteName = await setting('site_name', 'Fieldnote');
+const tagline = await setting('site_tagline', 'Stories for curious people');
+const logoUrl = await setting('logo_url');
+const defaultTitle = await setting('default_seo_title', `${siteName} — Stories for curious people`);
+const defaultDescription = await setting('default_seo_description', 'Illustrative reporting and ideas for curious people.');
+const shareImage = imageSource(image || await setting('default_social_image'));
+const catList = await categories().catch(() => []);
+const scriptsEnabled = await setting('head_scripts_enabled', 'false') === 'true';
+const headCode = scriptsEnabled ? await setting('head_scripts_code') : '';
+const bodyCode = scriptsEnabled ? await setting('body_start_code') : '';
+const adsEnabled = articleAds && await setting('ads_enabled', 'false') === 'true';
+const publisher = await setting('ads_publisher');
+const pageTitle = title ? `${title} | ${siteName}` : defaultTitle;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title><meta name="description" content={description || defaultDescription} />
+    <link rel="canonical" href={canonical} /><meta property="og:title" content={pageTitle} /><meta property="og:description" content={description || defaultDescription} /><meta property="og:url" content={canonical} /><meta property="og:type" content={articleAds ? 'article' : 'website'} />
+    {shareImage && <meta property="og:image" content={new URL(shareImage, Astro.url).href} />}<meta name="twitter:card" content="summary_large_image" />{shareImage && <meta name="twitter:image" content={new URL(shareImage, Astro.url).href} />}{noIndex && <meta name="robots" content="noindex,nofollow" />}
+    {adsEnabled && publisher && <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(publisher)}`} crossorigin="anonymous"></script>}
+    {headCode && <Fragment set:html={headCode} />}
+  </head>
+  <body>
+    {bodyCode && <Fragment set:html={bodyCode} />}
+    <div class="topbar"><header class="wrap headrow">
+      <a class="brand" href="/">{logoUrl ? <img src={imageSource(logoUrl)} alt={siteName} style="max-height:48px;max-width:190px;object-fit:contain" /> : siteName}</a>
+      <nav class="nav" aria-label="Main navigation"><a href="/">Home</a>{catList.map(c => <a href={`/category/${c.slug}/`}>{c.name}</a>)}<a href="/about/">About</a></nav>
+      <details class="mobile-menu"><summary aria-label="Open menu">Menu</summary><nav aria-label="Mobile navigation"><a href="/">Home</a>{catList.map(c => <a href={`/category/${c.slug}/`}>{c.name}</a>)}<a href="/about/">About</a><a href="/contact/">Contact</a></nav></details>
+      <form class="search" action="/search/" role="search"><label class="sr-only" for="site-search">Search articles</label><input id="site-search" name="q" placeholder="Search stories" /><button aria-label="Search">⌕</button></form>
+    </header></div>
+    <main><slot /></main>
+    <footer class="footer"><div class="wrap footer-row"><div><a class="brand" href="/">{siteName}</a><p>{tagline}</p></div><div><a href="/about/">About</a><a href="/contact/">Contact</a><a href="/privacy-policy/">Privacy</a><a href="/terms/">Terms</a><a href="/editorial-policy/">Editorial policy</a></div></div></footer>
+  </body>
+</html>

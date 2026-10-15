@@ -1,0 +1,6 @@
+---
+const { article } = Astro.props;
+import { imageSource } from '../lib/html';
+const date = article.published_at ? new Date(article.published_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+---
+<article class="card"><a href={`/article/${article.slug}/`}><img src={imageSource(article.image_url)} alt={article.image_alt || ''} loading="lazy" /></a><div class="card-body"><span class="tag">{article.category_name || 'Stories'}</span><h3><a href={`/article/${article.slug}/`}>{article.title}</a></h3><p>{article.excerpt}</p><div class="muted">{article.author_name} · {date}</div></div></article>

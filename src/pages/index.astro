@@ -1,0 +1,20 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import { articles, categories } from '../lib/content';
+import { imageSource } from '../lib/html';
+const latest = await articles(10);
+const cats = await categories();
+const lead = latest[0];
+---
+<SiteLayout>
+  <section class="hero wrap">
+    <div class="section-head"><div><span class="eyebrow">The latest edition</span><h2>Stories for curious people</h2></div><span class="muted">Independent ideas, thoughtfully told</span></div>
+    {lead ? <div class="hero-grid">
+      <article class="feature"><a href={`/article/${lead.slug}/`}><img src={imageSource(lead.image_url)} alt={lead.image_alt} /></a><div class="feature-body"><span class="tag">{lead.category_name}</span><h1><a href={`/article/${lead.slug}/`}>{lead.title}</a></h1><p>{lead.excerpt}</p><span class="muted">By {lead.author_name}</span></div></article>
+      <div class="side-list">{latest.slice(1,5).map(a => <article class="side-story"><a href={`/article/${a.slug}/`}><img src={imageSource(a.image_url)} alt={a.image_alt} /></a><div><span class="tag">{a.category_name}</span><h3><a href={`/article/${a.slug}/`}>{a.title}</a></h3><span class="muted">{a.author_name}</span></div></article>)}</div>
+    </div> : <p class="notice">No published articles yet. Sign in to the admin panel to begin publishing.</p>}
+  </section>
+  <section class="section wrap"><div class="section-head"><h2>Explore topics</h2></div><div class="categories">{cats.map(c => <a href={`/category/${c.slug}/`}>{c.name} <span class="muted">{c.article_count}</span></a>)}</div></section>
+  <section class="section wrap"><div class="section-head"><h2>Latest stories</h2><a href="/search/">Find a story →</a></div><div class="grid">{latest.slice(0,9).map(article => <ArticleCard article={article} />)}</div></section>
+</SiteLayout>
